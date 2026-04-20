@@ -50,6 +50,10 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
+productSchema.index({ name: "text", description: "text" });
+productSchema.index({ category: 1 });
+productSchema.index({ price: 1 });
+
 productSchema.plugin(mongooseAggregatePaginate);
 
 export const Product = mongoose.model("Product", productSchema);

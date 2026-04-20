@@ -6,6 +6,7 @@ import {
   getProductById,
   getProductsByCategory,
   removeProductSubImage,
+  searchProducts,
   updateProduct,
 } from "../../../controllers/apps/ecommerce/product.controllers.js";
 import {
@@ -47,6 +48,8 @@ router
     createProduct
   );
 
+router.route("/search").get(searchProducts);
+
 router
   .route("/:productId")
   .get(mongoIdPathVariableValidator("productId"), validate, getProductById)
@@ -78,7 +81,11 @@ router
 
 router
   .route("/category/:categoryId")
-  .get(mongoIdPathVariableValidator("categoryId"), validate, getProductsByCategory);
+  .get(
+    mongoIdPathVariableValidator("categoryId"),
+    validate,
+    getProductsByCategory
+  );
 
 router
   .route("/remove/subimage/:productId/:subImageId")

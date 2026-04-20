@@ -120,6 +120,7 @@ import cartRouter from "./routes/apps/ecommerce/cart.routes.js";
 import categoryRouter from "./routes/apps/ecommerce/category.routes.js";
 import couponRouter from "./routes/apps/ecommerce/coupon.routes.js";
 import orderRouter from "./routes/apps/ecommerce/order.routes.js";
+import wishlistRouter from "./routes/apps/ecommerce/wishlist.routes.js";
 import productRouter from "./routes/apps/ecommerce/product.routes.js";
 import ecomProfileRouter from "./routes/apps/ecommerce/profile.routes.js";
 
@@ -179,6 +180,7 @@ app.use("/api/v1/ecommerce/profile", ecomProfileRouter);
 app.use("/api/v1/ecommerce/cart", cartRouter);
 app.use("/api/v1/ecommerce/orders", orderRouter);
 app.use("/api/v1/ecommerce/coupons", couponRouter);
+app.use("/api/v1/ecommerce/wishlist", wishlistRouter);
 
 app.use("/api/v1/social-media/profile", socialProfileRouter);
 app.use("/api/v1/social-media/follow", socialFollowRouter);

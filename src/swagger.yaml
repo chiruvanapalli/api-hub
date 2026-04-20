@@ -23137,6 +23137,110 @@ paths:
                     message: Product created successfully
                     statusCode: 201
                     success: true
+  /ecommerce/products/search:
+    get:
+      tags:
+        - 🛒 Ecommerce
+      summary: Search products
+      description: >-
+        Full-text search across product `name` and `description` using a MongoDB
+        text index. Results are ranked by relevance score when `q` is provided.
+        Supports optional filtering by `category`, `minPrice`, and `maxPrice`.
+        All filters can be combined.
+      operationId: searchProducts
+      parameters:
+        - name: q
+          in: query
+          description: Search keyword (matches name and description)
+          schema:
+            type: string
+            example: shirt
+        - name: category
+          in: query
+          description: Filter by category ObjectId
+          schema:
+            type: string
+            example: 649e7bfcdbf96264731f5a0c
+        - name: minPrice
+          in: query
+          description: Minimum price filter
+          schema:
+            type: number
+            example: 200
+        - name: maxPrice
+          in: query
+          description: Maximum price filter
+          schema:
+            type: number
+            example: 1000
+        - name: page
+          in: query
+          schema:
+            type: string
+            example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: string
+            example: '10'
+      responses:
+        '200':
+          description: Products fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      products:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: 649e7bfcdbf96264731f5a0e
+                            name:
+                              type: string
+                              example: Men Regular Fit Casual Shirt
+                            description:
+                              type: string
+                              example: METRONAUT Men Regular Fit Solid Spread Collar Casual Shirt
+                            price:
+                              type: number
+                              example: 760
+                            stock:
+                              type: number
+                              example: 199
+                            category:
+                              type: string
+                              example: 649e7bfcdbf96264731f5a0c
+                            mainImage:
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  example: http://localhost:8080/images/shirt.webp
+                      totalProducts:
+                        type: number
+                        example: 5
+                      page:
+                        type: number
+                        example: 1
+                      totalPages:
+                        type: number
+                        example: 1
+                  message:
+                    type: string
+                    example: Products fetched successfully
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
   /ecommerce/products/{productId}:
     get:
       tags:
@@ -24390,10 +24494,141 @@ paths:
         schema:
           type: string
           example: 647c69c1912544cbe9cf05a2
+  /ecommerce/wishlist:
+    get:
+      tags:
+        - 🛒 Ecommerce
+      summary: Get my wishlist
+      description: Returns the logged-in user's wishlist with full product details.
+      operationId: getWishlist
+      responses:
+        '200':
+          description: Wishlist fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: 649e7bfcdbf96264731f5a0c
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: 649e7bfcdbf96264731f5a0d
+                            product:
+                              type: object
+                              properties:
+                                _id:
+                                  type: string
+                                  example: 649e7bfcdbf96264731f5a0e
+                                name:
+                                  type: string
+                                  example: Men Regular Fit Casual Shirt
+                                price:
+                                  type: number
+                                  example: 760
+                                stock:
+                                  type: number
+                                  example: 199
+                                mainImage:
+                                  type: object
+                                  properties:
+                                    url:
+                                      type: string
+                                      example: http://localhost:8080/images/shirt.webp
+                  message:
+                    type: string
+                    example: Wishlist fetched successfully
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
+  /ecommerce/wishlist/item/{productId}:
+    post:
+      tags:
+        - 🛒 Ecommerce
+      summary: Toggle wishlist item
+      description: >-
+        Adds a product to the wishlist if it is not present, or removes it if it
+        already exists (toggle behavior).
+      operationId: toggleWishlistItem
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 649e7bfcdbf96264731f5a0e
+      responses:
+        '200':
+          description: Added to wishlist / Removed from wishlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Added to wishlist
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Product does not exist
+  /ecommerce/wishlist/item/{productId}/move-to-cart:
+    post:
+      tags:
+        - 🛒 Ecommerce
+      summary: Move wishlist item to cart
+      description: >-
+        Adds the product to the user's cart (quantity 1, or increments if already
+        in cart) and removes it from the wishlist in one operation.
+      operationId: moveItemToCart
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 649e7bfcdbf96264731f5a0e
+      responses:
+        '200':
+          description: Item moved to cart successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Item moved to cart successfully
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Product out of stock or not in wishlist
+        '404':
+          description: Product does not exist
   /ecommerce/cart:
     get:
       tags:
-        
+
         - 🛒 Ecommerce
         
       summary: Get user cart
@@ -29852,12 +30087,156 @@ paths:
                     message: Orders fetched successfully
                     statusCode: 200
                     success: true
+  /ecommerce/orders:
+    get:
+      tags:
+        - 🛒 Ecommerce
+      summary: Get my orders
+      description: >-
+        Returns a paginated list of orders placed by the currently logged-in user,
+        sorted by newest first. Does not include full product details — use
+        `Get order by id` for complete order information.
+      operationId: getMyOrders
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+            example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: string
+            example: '10'
+      responses:
+        '200':
+          description: My orders fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: 649e7bfcdbf96264731f5a0c
+                            orderPrice:
+                              type: number
+                              example: 1970
+                            discountedOrderPrice:
+                              type: number
+                              example: 1620
+                            status:
+                              type: string
+                              example: PENDING
+                            isPaymentDone:
+                              type: boolean
+                              example: false
+                            paymentProvider:
+                              type: string
+                              example: RAZORPAY
+                            paymentId:
+                              type: string
+                              example: order_SfZZNqqa4uCiNX
+                            totalOrderItems:
+                              type: number
+                              example: 3
+                            coupon:
+                              type: object
+                              nullable: true
+                              example: null
+                            createdAt:
+                              type: string
+                              example: '2026-04-20T01:53:52.977Z'
+                            updatedAt:
+                              type: string
+                              example: '2026-04-20T01:53:52.977Z'
+                      totalOrders:
+                        type: number
+                        example: 5
+                      page:
+                        type: number
+                        example: 1
+                      totalPages:
+                        type: number
+                        example: 1
+                      hasNextPage:
+                        type: boolean
+                        example: false
+                      hasPrevPage:
+                        type: boolean
+                        example: false
+                  message:
+                    type: string
+                    example: My orders fetched successfully
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
+  /ecommerce/orders/{orderId}/cancel:
+    patch:
+      tags:
+        - 🛒 Ecommerce
+      summary: Cancel order
+      description: >-
+        Cancels a PENDING order placed by the logged-in user. Orders that are
+        already `DELIVERED` or `CANCELLED` cannot be cancelled.
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 649e7bfcdbf96264731f5a0c
+      responses:
+        '200':
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: 649e7bfcdbf96264731f5a0c
+                      status:
+                        type: string
+                        example: CANCELLED
+                      isPaymentDone:
+                        type: boolean
+                        example: false
+                  message:
+                    type: string
+                    example: Order cancelled successfully
+                  statusCode:
+                    type: number
+                    example: 200
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Order already cancelled or delivered
+        '404':
+          description: Order not found
   /ecommerce/orders/{orderId}:
     get:
       tags:
-        
+
         - 🛒 Ecommerce
-        
+
       summary: Get order by id
       description: >-
         The API allows users to retrieve information about an order placed by a

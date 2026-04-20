@@ -1,7 +1,9 @@
 import { Router } from "express";
 import {
+  cancelOrder,
   generatePaypalOrder,
   generateRazorpayOrder,
+  getMyOrders,
   getOrderById,
   getOrderListAdmin,
   updateOrderStatus,
@@ -19,7 +21,10 @@ import {
 } from "../../../validators/apps/ecommerce/order.validators.js";
 import { validate } from "../../../validators/validate.js";
 import { UserRolesEnum } from "../../../constants.js";
-import { mongoIdPathVariableValidator, mongoIdRequestBodyValidator } from "../../../validators/common/mongodb.validators.js";
+import {
+  mongoIdPathVariableValidator,
+  mongoIdRequestBodyValidator,
+} from "../../../validators/common/mongodb.validators.js";
 
 const router = Router();
 
@@ -27,10 +32,18 @@ router.use(verifyJWT);
 
 router
   .route("/provider/razorpay")
-  .post(mongoIdRequestBodyValidator("addressId"), validate, generateRazorpayOrder);
+  .post(
+    mongoIdRequestBodyValidator("addressId"),
+    validate,
+    generateRazorpayOrder
+  );
 router
   .route("/provider/paypal")
-  .post(mongoIdRequestBodyValidator("addressId"), validate, generatePaypalOrder);
+  .post(
+    mongoIdRequestBodyValidator("addressId"),
+    validate,
+    generatePaypalOrder
+  );
 
 router
   .route("/provider/razorpay/verify-payment")
@@ -40,9 +53,15 @@ router
   .route("/provider/paypal/verify-payment")
   .post(verifyPaypalPaymentValidator(), validate, verifyPaypalPayment);
 
+router.route("/").get(getMyOrders);
+
 router
   .route("/:orderId")
   .get(mongoIdPathVariableValidator("orderId"), validate, getOrderById);
+
+router
+  .route("/:orderId/cancel")
+  .patch(mongoIdPathVariableValidator("orderId"), validate, cancelOrder);
 
 router
   .route("/list/admin")

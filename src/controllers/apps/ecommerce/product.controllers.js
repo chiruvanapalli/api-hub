@@ -302,12 +302,57 @@ const deleteProduct = asyncHandler(async (req, res) => {
     );
 });
 
+const searchProducts = asyncHandler(async (req, res) => {
+  const { q, category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+
+  const matchStage = {};
+
+  if (q?.trim()) {
+    matchStage.$text = { $search: q.trim() };
+  }
+
+  if (category) {
+    matchStage.category = new mongoose.Types.ObjectId(category);
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    matchStage.price = {};
+    if (minPrice !== undefined) matchStage.price.$gte = Number(minPrice);
+    if (maxPrice !== undefined) matchStage.price.$lte = Number(maxPrice);
+  }
+
+  const pipeline = [{ $match: matchStage }];
+
+  if (q?.trim()) {
+    pipeline.push({ $sort: { score: { $meta: "textScore" } } });
+  }
+
+  const productAggregate = Product.aggregate(pipeline);
+
+  const products = await Product.aggregatePaginate(
+    productAggregate,
+    getMongoosePaginationOptions({
+      page,
+      limit,
+      customLabels: {
+        totalDocs: "totalProducts",
+        docs: "products",
+      },
+    })
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, products, "Products fetched successfully"));
+});
+
 export {
   createProduct,
   deleteProduct,
   getAllProducts,
   getProductById,
   getProductsByCategory,
+  searchProducts,
   updateProduct,
   removeProductSubImage,
 };

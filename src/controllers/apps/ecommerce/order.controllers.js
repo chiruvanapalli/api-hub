@@ -591,6 +591,82 @@ const getOrderListAdmin = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, orders, "Orders fetched successfully"));
 });
 
+const cancelOrder = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+
+  const order = await EcomOrder.findOne({
+    _id: orderId,
+    customer: req.user._id,
+  });
+
+  if (!order) {
+    throw new ApiError(404, "Order does not exist");
+  }
+
+  if (order.status === OrderStatusEnum.DELIVERED) {
+    throw new ApiError(400, "Delivered orders cannot be cancelled.");
+  }
+
+  if (order.status === OrderStatusEnum.CANCELLED) {
+    throw new ApiError(400, "Order is already cancelled.");
+  }
+
+  const updatedOrder = await EcomOrder.findByIdAndUpdate(
+    orderId,
+    { $set: { status: OrderStatusEnum.CANCELLED } },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedOrder, "Order cancelled successfully"));
+});
+
+const getMyOrders = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
+  const orderAggregate = EcomOrder.aggregate([
+    {
+      $match: {
+        customer: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "coupons",
+        foreignField: "_id",
+        localField: "coupon",
+        as: "coupon",
+        pipeline: [{ $project: { name: 1, couponCode: 1 } }],
+      },
+    },
+    {
+      $addFields: {
+        coupon: { $ifNull: [{ $first: "$coupon" }, null] },
+        totalOrderItems: { $size: "$items" },
+      },
+    },
+    { $project: { items: 0 } },
+    { $sort: { createdAt: -1 } },
+  ]);
+
+  const orders = await EcomOrder.aggregatePaginate(
+    orderAggregate,
+    getMongoosePaginationOptions({
+      page,
+      limit,
+      customLabels: {
+        totalDocs: "totalOrders",
+        docs: "orders",
+      },
+    })
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, orders, "My orders fetched successfully"));
+});
+
 export {
   generateRazorpayOrder,
   generatePaypalOrder,
@@ -598,5 +674,7 @@ export {
   verifyPaypalPayment,
   getOrderById,
   getOrderListAdmin,
+  getMyOrders,
+  cancelOrder,
   updateOrderStatus,
 };
